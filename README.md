@@ -8,7 +8,7 @@
 
 ## Why this exists
 
-AI agents are moving from demos into production, where they read tickets, change code, query databases, and call internal APIs. Most of them do this with broad, long-lived credentials and no consistent way to answer basic questions:
+AI agents are moving from demos into production, where they read tickets, change code, query databases, and call APIs. Most of them do this with broad, long-lived credentials and no consistent way to answer basic questions:
 
 - What did the agent do, and was it allowed to?
 - Whose authority was it acting under: the user's, its own, or another agent's?
@@ -19,28 +19,27 @@ Security and compliance teams are blocking agent rollouts because there are no g
 
 ## What it does
 
-AgentWall is a proxy that every agent-to-tool call passes through. For each call it:
+AgentWall is a proxy layer that every agent-to-agent or agent-to-tool call passes through. For each call it:
 
 1. **Identifies** the caller: the agent, the end user, and any agents in between.
 2. **Decides** whether to allow, deny, or require human approval, based on policy.
 3. **Brokers credentials** so agents never hold real secrets. Upstream tools receive short-lived, narrowly scoped tokens.
-4. **Inspects** inputs and outputs for prompt injection, secrets, and personal data. 5. **Records** the decision in a tamper-evident audit log and emits OpenTelemetry traces.
+4. **Records** the decision in a tamper-evident audit log and emits OpenTelemetry traces.
 
-```mermaid
-flowchart LR
-    A[AI agents] --> G
-    subgraph G [AgentWall gateway]
-        direction LR
-        AD[Adapter<br/>MCP and HTTP] --> P[Policy engine]
-        P --> B[Credential broker]
-        B --> I[Inspect and audit]
-    end
-    G --> T[Tools<br/>MCP servers, APIs, databases]
-    P -.-> H[Human approvers<br/>Slack or email]
-    B -.-> S[Secret backends<br/>OAuth, Vault, cloud STS]
-    I -.-> O[Observability<br/>OpenTelemetry, Langfuse, SIEM]
-    C[Control plane<br/>policies, agent registry] --> G
-```
+## Architecture
+
+![AgentWall Architecture Diagram](public/image.png)
+
+### Workflow
+
+1. User or a webhook/trigger calls an agent
+2. Agent make a request either to a LLM, a MCP server or an external API
+3. All requests from an agent is sent through the AgentWall
+4. AgentWall identifies the Agent as well as the user based on user request header
+5. AgentWall policy engine either verify, or deny or ask for human approval the Agent's request based on the set policy.
+6. If the request is allowed, a short lived token is created for this particular request.
+7. AgentWall allow the request to forward to the target tool or service
+8. All the above actions are recorded in a hash-chainded append only logs.
 
 ## Core ideas
 
@@ -59,15 +58,11 @@ An example of the kind of rule we want to make easy to write (illustrative; the 
 
 | Area              | What is planned                                                                                     |
 | ----------------- | --------------------------------------------------------------------------------------------------- |
-| **Gateway**       | MCP (stdio and HTTP) proxy with a swappable protocol layer, streaming-safe, fail closed             |
-| **Policy**        | Attribute-based policies, a `policy test` CLI, explainable decisions, shadow mode, replay simulator |
-| **Identity**      | Workload identity for agents, end-user identity passthrough, agent-to-agent delegation chains       |
-| **Credentials**   | Token broker with OAuth token exchange, then Vault and AWS STS backends                             |
+| **Proxy**         | Streaming-safe, fail closed proxy                                                                   |
+| **Policy Engine** | Attribute-based policies engine powered by OPA                                                      |
 | **Approvals**     | Human-in-the-loop approvals via Slack, with signed decision records                                 |
 | **Audit**         | Hash-chained, tamper-evident log with signed checkpoints and a `verify` command                     |
 | **Observability** | OpenTelemetry export, with a Langfuse and Grafana demo stack                                        |
-| **Detection**     | Pluggable detectors for prompt injection, secrets, and PII                                          |
-| **Operations**    | Control plane API, signed policy bundles, Helm chart, high availability                             |
 
 ## Roadmap
 
@@ -91,11 +86,7 @@ The project is planned as a twelve-month effort, tracked in Linear with one proj
 
 ## Getting started
 
-There is nothing to install or setup yet. To follow along:
-
-- **Watch or star the repository** for release announcements.
-- **Read the open issues** to see what is being worked on.
-- **Join the discussion** (GitHub Discussions will open before the v0.1 launch).
+There is nothing to install or setup yet. Details will be added in future
 
 ## Contributing
 
