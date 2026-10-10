@@ -66,16 +66,7 @@ An example of the kind of rule we want to make easy to write (illustrative; the 
 
 ## Roadmap
 
-The project is planned as a twelve-month effort, tracked in Linear with one project per phase.
-
-| Phase                       | Focus                                                                                 |
-| --------------------------- | ------------------------------------------------------------------------------------- |
-| **0. Foundations**          | Repo setup, MCP study, policy engine and language decisions, threat model, benchmarks |
-| **1. Core proxy**           | Passthrough MCP proxy, Action model, static rules, audit log v0                       |
-| **2. Policy and identity**  | Policy schema and engine, agent and user identity, `user ∩ agent` enforcement         |
-| **3. v0.1 launch**          | Token broker, approvals, tamper-evident audit, OpenTelemetry, first public release    |
-| **4. Production hardening** | Delegation chains, replay, policy manifests, control plane, HA, load testing          |
-| **5. v1.0**                 | Detectors, audit viewer and SSO, stable APIs, independent security review             |
+Refer [Roadmap](docs/roadmap.md)
 
 ## Non-goals (for now)
 
