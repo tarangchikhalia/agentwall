@@ -77,7 +77,7 @@ Refer [Roadmap](docs/roadmap.md)
 
 ## Getting started
 
-There is nothing to install or setup yet. Details will be added in future
+The Go foundation scaffold is available for development; proxy functionality is not implemented yet. See [development setup](docs/development.md) for build, test, and CI commands.
 
 ## Contributing
 
