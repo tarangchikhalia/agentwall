@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/tarangchikhalia/agentwall/internal/server"
 )
 
 func main() {
@@ -13,6 +15,8 @@ func main() {
 
 func run(args []string, stdout, stderr io.Writer) int {
 	flags := flag.NewFlagSet("agentwall", flag.ContinueOnError)
+	flagIsDev := flags.Bool("dev-http", false, "Explicitely enables local HTTP")
+	flagAddr := flags.String("addr", "127.0.0.1:8080", "Provide listener address")
 	flags.SetOutput(stderr)
 	flags.Usage = func() {
 		fmt.Fprintln(stderr, "Usage: agentwall [-help]")
@@ -29,9 +33,20 @@ func run(args []string, stdout, stderr io.Writer) int {
 		flags.Usage()
 		return 2
 	}
-	if _, err := fmt.Fprintln(stdout, "AgentWall foundation scaffold: proxy functionality is not implemented."); err != nil {
-		fmt.Fprintf(stderr, "agentwall: write output: %v\n", err)
-		return 1
+
+	if *flagIsDev {
+		newserver := server.NewServer(*flagAddr)
+		fmt.Fprintf(stdout ,"Listening on address: %s ... \n", *flagAddr)
+		
+		if err := newserver.ListenAndServe(); err != nil {
+			fmt.Fprintf(stderr, "agentwall: listener failed: %v\n", err)
+			return 1
+		}
+	} else {
+		if _, err := fmt.Fprintln(stdout, "AgentWall foundation scaffold: proxy functionality is not implemented."); err != nil {
+				fmt.Fprintf(stderr, "agentwall: write output: %v\n", err)
+				return 1
+			}
 	}
 	return 0
 }
