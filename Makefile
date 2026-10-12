@@ -1,7 +1,7 @@
 .PHONY: build test fmt fmt-check vet dependencies security check
 
 build:
-	CGO_ENABLED=0 go build -trimpath -o bin/agentwall ./cmd/agentwall
+	CGO_ENABLED=0 go build -trimpath -o bin/agentwall .
 
 test:
 	go test -race ./...

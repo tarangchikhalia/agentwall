@@ -36,17 +36,17 @@ func run(args []string, stdout, stderr io.Writer) int {
 
 	if *flagIsDev {
 		newserver := server.NewServer(*flagAddr)
-		fmt.Fprintf(stdout ,"Listening on address: %s ... \n", *flagAddr)
-		
+		fmt.Fprintf(stdout, "Listening on address: %s ... \n", *flagAddr)
+
 		if err := newserver.ListenAndServe(); err != nil {
 			fmt.Fprintf(stderr, "agentwall: listener failed: %v\n", err)
 			return 1
 		}
 	} else {
 		if _, err := fmt.Fprintln(stdout, "AgentWall foundation scaffold: proxy functionality is not implemented."); err != nil {
-				fmt.Fprintf(stderr, "agentwall: write output: %v\n", err)
-				return 1
-			}
+			fmt.Fprintf(stderr, "agentwall: write output: %v\n", err)
+			return 1
+		}
 	}
 	return 0
 }
