@@ -1,6 +1,6 @@
 # Development
 
-Install Go 1.26.5 (the version in `go.mod`) and Make. CI uses the same Go version on Ubuntu 24.04. Race tests require CGO support and a C compiler; the executable builds with CGO disabled.
+Install Go 1.26.9 (the version in `go.mod`) and Make. CI uses the same Go version on Ubuntu 24.04. Race tests require CGO support and a C compiler; the executable builds with CGO disabled.
 
 ```sh
 make build       # bin/agentwall
@@ -13,7 +13,7 @@ make check      # Formatting, vet, modules, tests, build, vulnerability scan
 
 The executable prints its foundation status and exits without opening a listener. It does not implement proxy functionality. Exit codes: 0 for normal output/help, 2 for invalid arguments, 1 for output failure.
 
-`cmd/agentwall/` owns executable startup and CLI tests. Introduce `internal/` packages as implementation needs arise. The module is `github.com/tarangchikhalia/agentwall`; the application currently uses only the standard library, so no `go.sum` is needed.
+The project root owns executable startup and CLI tests. Introduce `internal/` packages as implementation needs arise. The module is `github.com/tarangchikhalia/agentwall`; the application currently uses only the standard library, so no `go.sum` is needed.
 
 `make security` runs pinned `govulncheck` v1.1.4. Initial tool downloads and vulnerability database access require network access. CI actions are pinned to official commit SHAs with read-only permissions and no persisted checkout credential. Update pins deliberately; failures in formatting, tests, module consistency, or vulnerability scanning fail CI.
 

@@ -1,51 +1,54 @@
-# AgentWall threat model — STRIDE
+# AgentWall v0.1 threat model
 
-## Scope and boundaries
+Date: 2026-10-14
+Status: Architecture baseline; refine alongside implementation contracts
 
-One organization per deployment. Agents, requests, tool responses, and network peers are untrusted. Attackers may impersonate callers, control an agent or upstream, replay messages, or overload the gateway. 
-Administrators and signing infrastructure are privileged trust dependencies.
+## Assets and boundary
 
-Protected assets: user/agent authority, delegation chains, policies, approval decisions, upstream credentials, request/response data, audit evidence, and signing keys.
+Protect caller credentials, authorization integrity, policy source and active bundles, administrative authority, audit confidentiality, and service availability. One organization and one service instance are in scope.
+
+Untrusted applications submit requests to the REST service. API keys authenticate the calling service; principal, agent, resource, and context assertions are accepted only within configured trust constraints. External applications authenticate their users and enforce decisions. AgentWall cannot prevent a caller from ignoring a deny, bypassing integration, or lying within its granted assertion authority.
 
 ```mermaid
 flowchart LR
-  U[User or authenticated trigger] --> A[Agent A]
-  A -->|LLM / MCP / REST / A2A request| G
-  subgraph Boundary[AgentWall enforcement boundary]
-    G[Gateway] --> P[Policy engine]
-    G --> C[Credential broker]
-    G --> L[Durable audit / checkpoints]
-  end
-  I[Identity provider] -->|Verified authority| G
-  H[Approver via Slack] -->|Action-bound decision| G
-  N[Administrator via control plane] -->|Authorized changes| P
-  G -->|Authorized call / scoped credential| T[Tool / LLM / Agent B]
-  T -->|Untrusted response| G
-  G -->|Response| A
-  V[Auditor via SSO viewer] -->|Restricted access| L
+  C[Caller application] -->|Untrusted request and API key| S[Authentication and assertion checks]
+  S --> E[Native evaluator snapshot]
+  E --> Q[Audit admission]
+  Q --> D[(PostgreSQL)]
+  Q -->|Decision| C
+  G[Trusted Git source] --> V[Validation and preparation]
+  V --> E
+  V --> B[(Persistent bundles and recovery state)]
+  A[Privileged local administrator] --> K[Keys and lifecycle CLI]
+  K --> S
+  K --> B
+  R[Scoped audit reader] --> DQ[Audit query API]
+  DQ --> D
 ```
 
-External identity, approval, administration, upstream, and audit-access flows each cross a trust boundary. Agent B's subsequent calls must pass through the gateway with the full initiating authority and delegation chain.
+## Threats and validation
 
-## STRIDE threats
-
-| Category | Threat | Mitigation / requirement | Planned validation |
-| --- | --- | --- | --- |
-| Spoofing | Forged user/agent identity, delegation, or Slack approver. | Authenticate and bind assertions to requests; validate issuer, expiry, chain provenance, and approver eligibility. FR-06–09, FR-16–18. | Reject forged headers, expired assertions, omitted chain members, and unauthenticated callbacks. |
-| Tampering | Altered actions, policy, approvals, or audit records. | Validate requests; restrict/version policy changes; bind approvals to exact actions; hash-chain audit records with signed trusted checkpoints. FR-05, FR-12, FR-17, FR-19. | Reject altered approvals and unauthorized policy changes; detect changed/reordered records and checkpoint-covered truncation. |
-| Repudiation | Caller, approver, or administrator denies an operation. | Record authority, action, policy version, reason, approval signature, and execution outcome; durably record decisions before forwarding. FR-20–21. | Correlate each action with evidence; simulate crashes and distinguish unknown outcomes from confirmed execution. |
-| Information disclosure | Secrets or protected data leak through responses, logs, telemetry, or malicious destinations. | Inject scoped credentials only upstream; protect transport/storage; redact outputs; enforce team access and destination restrictions. FR-05, FR-08, FR-14, FR-23, NFR-02–03, NFR-11. | Check credential leakage, cross-team reads, redirects/SSRF, and optional external exports. |
-| Denial of service | Oversized inputs, excessive streams, expensive policy, or dependency/storage exhaustion. | Bound payloads, concurrency, execution time, and queues; expose health; fail closed when required security dependencies fail. FR-05, FR-15, FR-21, NFR-01, NFR-07. | Overload and cancel streams; interrupt policy/broker/audit/approval services; verify bounded resources and no unauthorized forwarding. |
-| Elevation of privilege | A stronger agent launders authority; replayed approvals or team rules bypass guardrails. | Intersect initiating authority with every agent; reject invalid delegation; prevent weaker rules and approvals overriding guardrails; revalidate before execution. FR-08–11, FR-17–18, FR-30. | Deny user → Agent A → Agent B escalation, cyclic/replayed chains, duplicate approvals, and actions revoked while pending. |
+| Threat | Mitigation | Required evidence |
+| --- | --- | --- |
+| Caller spoofing or unauthorized identity assertion | Scoped keys; server-derived caller identity; explicit field/value assertion constraints | Forged/revoked keys and out-of-scope assertions fail; AUTH-01–03 |
+| Policy bypass through missing values, negation, wildcards or invalid types | Strict schema, published truth tables, default deny, deny precedence, bounded conditions | Negative semantic fixtures and evaluation error tests; POL-01–04 |
+| Partial reload, corrupt bundles or rollback silently undone | Validate/test/prepare before atomic activation; integrity checks; persisted pin/recovery state | Concurrent reload, failed candidate, corruption, restart and polling tests; LIFE-01–04 |
+| Administrative escalation or key disclosure | Separate admin identity, least privilege, hashed secrets, protected local storage | Unauthorized admin actions fail; rotation and leakage tests; AUTH-01–03 |
+| Audit loss or duplicates under outages/crashes | Bounded queue/retries, strict admission default, idempotent inserts, loss metrics | Saturation, retry exhaustion, outage and drain tests; AUD-01–02 |
+| Audit disclosure or unsafe query/retention behavior | Scoped queries, parameterized storage access, data minimization, bounded cleanup | Cross-scope, injection, pagination, redaction and retention tests; AUD-03–04 |
+| Resource exhaustion through inputs, policies, Git or database | Request/evaluation/concurrency/queue limits, timeouts, bounded background work | Overload and fault injection keep resources bounded; POL-03, OPS-01 |
+| Git credentials, keys or request secrets leak via diagnostics | Restricted credentials and telemetry; redact/minimize inputs | No secrets in events/logs/traces/metrics; AUTH-01, AUD-03, OPS-01 |
+| Network interception or exposed operations interfaces | Document TLS termination, protected database transport and restricted admin/metrics access | Deployment access and transport checks; OPS-02 |
 
 ## Assumptions and residual risks
 
-- Operators must block direct agent access to upstream tools and credentials. Traffic bypassing AgentWall cannot be governed.
-- Prompt injection can cause policy-permitted misuse; detectors are excluded. Model-context data and actions outside gateway traffic remain invisible.
-- Compromised administrators, gateway hosts, or signing keys can undermine controls. Hash chains alone cannot prove completeness; truncation evidence requires trusted external checkpoints.
-- Upstream effects may occur before a crash prevents outcome recording. Unknown outcomes require reconciliation; retries cannot guarantee exactly-once execution.
-- Identity/SSO mechanisms, credential backend, key custody/anchoring, retention defaults, and active-stream revocation behavior remain unresolved. These assumptions require review before production use.
+- Trusted integrations may lie within their assertion permissions. v0.1 does not establish permission intersection or verified delegation.
+- In-memory audit admission is not durable persistence. Strict mode can lose accepted events on process/host crash. PostgreSQL records are not tamper-evident; privileged deletion or alteration is not independently detectable.
+- Decision events do not prove execution or execution outcome. The caller remains responsible for enforcing errors/timeouts and binding a decision to the action it performs.
+- Trusted administrators, Git writers, service hosts, and database operators can undermine guarantees. SHA-256 content addressing alone does not authenticate a maliciously replaced bundle or recovery pointer.
+- Audit retention intentionally deletes history. Payload minimization and redaction constrain future replay; replay is deferred.
+- HA, signed audit checkpoints, durable-before-response records, approvals, credential brokerage, verified user authority, and runtime isolation require later threat-model extensions.
 
-## Review
+## Unresolved contracts
 
-Update this model when protocols, authority rules, integrations, deployment boundaries, or key/storage choices change; provide the reviewed version to the independent v1.0 security review (NFR-09, NFR-12).
+Resolve the trust matrix, missing-value semantics, retry exhaustion/loss accounting, readiness under outage, admin bootstrap, Git source restrictions, local integrity protections, and TLS deployment before their implementation. Track these in [requirements](requirements.md). Review this model at each milestone and link tests to the requirements above.

@@ -8,7 +8,7 @@ Our first focus is policy evaluation and audit. AgentWall will answer whether an
 
 ## First release: policy and audit
 
-- Embedded OPA with declarative, versioned YAML policies.
+- Native Go evaluator with declarative, versioned YAML policies.
 - Explicit deny overrides allow; default deny.
 - Scoped API keys and validation of the attributes each caller may assert.
 - REST authorization responses containing decision ID, outcome, reason, and policy revision.
@@ -23,7 +23,7 @@ Strict audit mode will reject requests when their decision events cannot be acce
 ```mermaid
 flowchart LR
   A[Integrating application] -->|Scoped API key and authorization request| S[AgentWall]
-  S --> P[Embedded OPA snapshot]
+  S --> P[Native Go evaluator snapshot]
   S --> Q[Bounded audit queue]
   Q --> D[(PostgreSQL)]
   G[Git policies] --> V[Validate and prepare bundle]

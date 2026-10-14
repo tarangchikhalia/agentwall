@@ -1,25 +1,24 @@
 # Benchmark conditions
 
-Supported interfaces and versions follow [support-matrix.md](support-matrix.md). Performance targets follow [requirements.md](requirements.md).
+Date: 2026-10-14
+Status: Planned v0.1 acceptance methodology; no benchmark results claimed
 
-## Targets
+Targets follow [requirements](requirements.md). This measures the standalone policy and audit service, not gateway forwarding.
 
-| Measure | Target |
+| Measure | v0.1 target |
 | --- | --- |
-| Completed requests | At least 1,000 requests/second |
-| Average gateway-added latency | At most 10 ms |
-| Concurrent requests | 100 |
-| Initial identity population | 1,000 users and 100 agents |
-| Maximum MCP request body | 4 MiB; each file at most 512 KiB |
-| Maximum REST/LLM API request body | 20 MiB |
+| Sustained authorization throughput | At least 1,000 requests/second |
+| Concurrent in-flight requests | At least 100 |
+| p99 authorization processing latency | Below 5 ms, excluding network transit |
+| Audit memory | Bounded under normal load and outages |
+| Policy activation | No partial snapshots or interrupted in-flight evaluation |
 
-The initial identity population is a baseline. Larger populations must separately validate the requirement for thousands of users and hundreds of agents.
+Measure the full server path: API-key authentication, JSON decoding/validation, trusted context checks, native Go policy evaluation, audit admission, and response encoding. Separately report component timings and end-to-end client latency. Asynchronous database persistence is outside response latency but its throughput, backlog, and failures must be measured. Strict mode is the reference deployment; best-effort results must be labeled separately.
 
-## Measurement and acceptance
+Publish hardware, OS, Go/PostgreSQL versions and evaluator semantics version, revision, policy count/complexity, input sizes, key population, queue/batch/retry settings, database placement, load generator, concurrency, warmup/run duration, and reproduction commands. Define workload proportions and acceptable error thresholds before release acceptance.
 
-- Gateway-added latency includes validation, identity, policy, credential issuance, durable audit, queueing, and forwarding overhead. Exclude measured upstream execution and human approval wait; avoid double-counting overlapping work.
-- Report offered versus completed throughput, errors/timeouts, average and p95/p99 latency, CPU/memory, concurrent requests, and active streams. Fast failures or pending approvals do not count toward allowed-call throughput.
-- Each measured run must meet 1,000 completed requests/second and average added latency at most 10 ms within the agreed error threshold. Preserve raw results and reproduction commands.
-- Denied/pending calls must not reach upstreams; required dependency failures must fail closed. Disabled security controls invalidate the result.
+Report offered/completed throughput, allow/deny distribution, errors/timeouts, average/p50/p95/p99 latency, CPU/memory, queue depth, event persistence rate and loss. Fast errors do not satisfy throughput targets. A continuously growing backlog is not a sustainable passing result. Verify eventual persistence after a healthy run drains.
 
-Reference hardware, workload proportions, run timing, error threshold, and A2A payload limits remain to be agreed before release acceptance. These benchmarks do not establish the separate 99% availability requirement.
+Exercise default deny, explicit deny, representative allows, concurrent reloads, invalid policies, database outages, queue saturation, and recovery. Validate strict/best-effort behavior separately; security controls must remain enabled.
+
+The previous gateway target of at most 10 ms average added latency and 99% availability are historical future-stage inputs, not equivalent v0.1 measurements or gates. Reference hardware, precise workload, limits, durations, and error threshold remain contract work.

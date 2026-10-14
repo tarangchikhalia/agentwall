@@ -1,14 +1,31 @@
-# AgentWall roadmap to v1.0
+# AgentWall roadmap
 
-> Current Status: M0-Foundations
+Date: 2026-10-14
+Current status: Foundation scaffold; policy engine and audit first
 
-## Milestone plan
+## Stage 1: standalone policy and audit service, v0.1
+
+Milestones advance on evidence, not elapsed weeks. Security scenarios are tested throughout implementation.
 
 | Milestone | Deliverable | Exit gate |
 | --- | --- | --- |
-| M0 — Foundations | Agreed support/trust/storage/deployment contracts, initial threat model, Go build/CI, runnable benchmark runner and protocol fixtures. | Pending foundation choices have reviewed decisions; clean build and controlled baseline benchmarks reproduce; threat boundaries and risks are documented. |
-| M1 — Core gateway, development alpha | Shared Action schema, configuration, OPA evaluation, durable audit append, secure outbound transport, fail-closed dispatch, and MCP/REST/LLM/A2A adapters. | All adapters normalize Actions and pass protocol fixtures; deny/pending and dependency-failure tests cause no upstream execution; streaming/cancellation preserve boundaries. Identity/broker/approval fakes are development-only and cannot enable production readiness. |
-| M2 — Identity and authority | Verified users/workloads, delegation provenance, permission intersection, layered policy/manifests, versioned administration API and CLI, administrative roles. | User/agent-chain authority only shrinks; forged/replayed assertions fail; team rules cannot weaken organization guardrails; policy activation/rollback is attributable. |
-| M3 — v0.1 integrated preview | Selected per-call credential backend, hash-chained audit with signed checkpoints and verification CLI, policy-driven Slack approvals, telemetry and demo stack. | Every supported traffic family passes real integration tests for allow/deny/approval, credential secrecy, durable pre-forward audit, and revalidation. Corruption/truncation tests validate the declared audit guarantees. Publish scope/limitations; this milestone does not claim final HA, availability, performance, or independent-review completion. |
-| M4 — v0.5 production-hardening beta | Policy replay/shadow mode, health diagnostics, supported deployment packaging, HA audit/approval/policy consistency, failover/streaming validation, operations runbooks. | Replica/dependency failures cannot weaken security; shadow evaluation cannot affect enforcement; replay never executes tools; restore/rotation and bypass-prevention instructions are exercised. Beta remains subject to final release gates. |
-| M5 — v1.0 release candidate to stable | Provider-agnostic SSO audit viewer, security regressions, scale/performance and availability evidence, stable contracts, updated threat model, independent review, release artifacts and documentation. | All accepted requirements link to passing evidence; 1,000 requests/sec and at most 10 ms average overhead meet the agreed workload; identity scale and 99% availability are demonstrated; recovery targets pass; blocking review findings are fixed and retested. |
+| M0 — Contracts | Policy schema/semantics, trust matrix, OpenAPI, audit failure states, storage and CLI contracts; updated threat model. | Implementation prerequisites in requirements are resolved; fixtures specify boundary and failure cases. |
+| M1 — Policy and audit vertical slice | Local validated YAML bundle, native Go evaluator, scoped caller authentication/assertion checks, REST authorization, bounded queue and PostgreSQL persistence; sample enforcing application. | Allow/deny/default-deny and assertion tests pass; denied/error responses block the sample action; events correlate with decisions; queue saturation follows strict/best-effort contract. |
+| M2 — Safe policy lifecycle | Git polling, policy tests, immutable persistence, atomic activation, restart recovery, rollback/pin/resume CLI. | Invalid candidates preserve active state; concurrent evaluation sees complete snapshots; rollback survives restart and polling. |
+| M3 — Audit and administration | Key management, scoped audit REST/CLI queries, retention, retry/recovery and shutdown behavior. | Revocation, rotation, restricted queries, retry exhaustion, database outages, and bounded cleanup/drain are tested. |
+| M4 — Operations and validation | Metrics, traces, logs, readiness, Docker Compose, migrations, backup/restore and benchmark harness. | Fresh deployment and recovery reproduce; race/security/failure tests pass; benchmark methodology and results are published. |
+| M5 — v0.1 release | Integration example, policy guide, API/CLI reference, threat model, ADRs, runbooks and tagged artifacts. | An independent engineer deploys, integrates, queries decisions, updates/rolls back policies, and operates the service using documentation. |
+
+The vertical slice needs only the authentication and storage necessary to safely exercise policy and audit. Full administration follows; it must not delay proving the core path or turn unauthenticated scaffolding into a deployable service.
+
+## Stage 2: AI gateways, separately reviewed after v0.1
+
+Evaluate LLM gateway behavior, MCP tool authorization, and agent-to-agent identity/delegation incrementally. Provider routing, streaming, token accounting, credential brokerage, and end-user authority verification require explicit contracts before commitment. The old gateway requirements are historical input, not automatic acceptance criteria.
+
+## Stage 3: secure agent runtime
+
+Consider workload identity, sandboxing, network isolation, and execution lifecycle only after reviewing Stage 2 outcomes. Do not introduce unfinished runtime code in v0.1.
+
+## Historical plans
+
+The previous [gateway roadmap](archive/gateway-v1-roadmap.md) and [v1 requirements](archive/gateway-v1-requirements.md) are superseded by [ADR 003](ADRs/003-policy-audit-first.md).
