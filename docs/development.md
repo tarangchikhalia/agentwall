@@ -18,3 +18,7 @@ The project root owns executable startup and CLI tests. Introduce `internal/` pa
 `make security` runs pinned `govulncheck` v1.1.4. Initial tool downloads and vulnerability database access require network access. CI actions are pinned to official commit SHAs with read-only permissions and no persisted checkout credential. Update pins deliberately; failures in formatting, tests, module consistency, or vulnerability scanning fail CI.
 
 Before adding a dependency, follow the maintenance, security, and license review in [CONTRIBUTING.md](../CONTRIBUTING.md). Run `go mod tidy` and commit `go.sum` when dependencies are added. Keep generated binaries in ignored `bin/`.
+
+## Policy contract checks
+
+AGE-7 has a development-only Python conformance suite in [tests/policy_schema](../tests/policy_schema/README.md). Install its pinned requirements in a virtual environment, then run `make policy-test PYTHON=/path/to/venv/bin/python`. CI runs this suite alongside Go checks. The Python oracle specifies expected behavior; the Go service remains a scaffold until the dependent loader and evaluator tasks are implemented.

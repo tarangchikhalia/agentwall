@@ -14,9 +14,9 @@ v0.1 serves one organization on one service instance. Applications request autho
 | ID | Requirement | Acceptance evidence |
 | --- | --- | --- |
 | POL-01 | A native Go evaluator interprets validated YAML policies using `agentwall.dev/v1alpha1`, compiled into immutable typed condition trees. Policies cannot execute arbitrary code; no OPA/Rego dependency is required. | Policy fixtures demonstrate equivalent YAML and evaluator behavior. |
-| POL-02 | At least one matching allow and no matching deny are required to allow. Ordering and directories have no semantic effect. | Default denial, deny precedence, and reorder tests pass. |
-| POL-03 | Reject unknown fields, unsupported schema versions/operators, invalid types, and policies exceeding configured limits. | Invalid candidates cannot replace the active bundle. |
-| POL-04 | Support typed `eq`, `neq`, `in`, `notIn`, `startsWith`, `gt`, `gte`, `lt`, `lte`, and logical `all`, `any`, `not`. Use trusted server time for time conditions. | Published semantics and fixtures cover missing/null attributes, negation, type errors, wildcard boundaries, and nesting limits. Detailed truth tables remain a contract prerequisite. |
+| POL-02 | At least one true applicable allow and all applicable deny conditions false are required to allow; true or unknown deny conditions block. Evaluation errors remain failures. Ordering and directories have no semantic effect. | Default denial, deny precedence, and reorder tests pass. |
+| POL-03 | Reject unknown fields outside extensible metadata, unsupported schema versions/operators, invalid types, and policies exceeding the versioned limits. | Invalid candidates cannot replace the active bundle. |
+| POL-04 | Support typed `eq`, `neq`, `in`, `notIn`, `startsWith`, `gt`, `gte`, `lt`, `lte`, `range`, logical `all`, `any`, `not`, and explicit `always: true`. Use trusted server time for time conditions. | Published semantics and fixtures cover missing/null attributes, negation, type errors, wildcard boundaries, and nesting limits. The [truth tables](policy-operator-tables-v1alpha1.md) and [shared fixtures](../tests/policy_schema/README.md) define the implementation contract. |
 | LIFE-01 | Poll a configured Git branch or revision, default every 60 seconds; validate and run policy tests before preparing a candidate. | Failed fetch, validation, tests, or preparation preserve the current revision. |
 | LIFE-02 | Persist immutable SHA-256-addressed bundles and atomically activate prepared snapshots. | Concurrent requests see one complete revision each; corruption is rejected. |
 | LIFE-03 | Restore validated last-known-good state on startup; otherwise remain unready for authorization. | Restart and missing/corrupt bundle tests pass. |
@@ -43,7 +43,7 @@ v0.1 serves one organization on one service instance. Applications request autho
 
 ## Contracts to resolve before dependent implementation
 
-1. YAML schema, missing/null and negative comparison truth tables, wildcard semantics, and resource limits.
+1. Policy contract specified by AGE-7: [schema](policy-schema-v1alpha1.md), [semantics](policy-semantics.md), [Go representation](policy-go-model-v1alpha1.md), and [conformance corpus](../tests/policy_schema/README.md). Production loader/evaluator adoption and implementation acceptance tests remain pending.
 2. OpenAPI schemas, errors including audit admission failure, scopes, query pagination, and request limits.
 3. Trust matrix: server-derived fields, allowed caller assertions, permitted values/namespaces, omissions, and rejection rules.
 4. Audit state machine: capacity accounting including in-flight batches, retry exhaustion, loss accounting, shutdown deadline, and readiness during outages.

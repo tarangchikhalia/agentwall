@@ -1,10 +1,15 @@
-.PHONY: build test fmt fmt-check vet dependencies security check
+.PHONY: build test policy-test fmt fmt-check vet dependencies security check
+
+PYTHON ?= python3
 
 build:
 	CGO_ENABLED=0 go build -trimpath -o bin/agentwall .
 
 test:
 	go test -race ./...
+
+policy-test:
+	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) -m unittest discover -s tests/policy_schema -v
 
 fmt:
 	gofmt -w $$(git ls-files --cached --others --exclude-standard '*.go')
