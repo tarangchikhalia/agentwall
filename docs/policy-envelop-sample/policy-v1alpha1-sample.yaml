@@ -1,0 +1,44 @@
+# Illustrative source sample; deploy as agentwall-policy.yaml.
+# One policy document per file. Every rule requires scope and condition.
+apiVersion: agentwall.dev/v1alpha1
+kind: AgentPolicy
+metadata:
+  name: code-review # Required unique identifier; max 50 characters, no whitespace.
+  description: Allow engineering code reviews within token limits and deny secret reads.
+  agent-name: code-review-agent-xx
+  team: engineering
+  priority: 1
+  labels:
+    - code-review
+    - github
+  ownership:
+    team: engineering
+    contact: platform-team
+rules:
+  # Both conditions must hold. Separate allow rules would grant independently.
+  - id: allow-read
+    effect: allow
+    scope:
+      resource: tools/github/read
+    condition:
+      all:
+        - field: user.department
+          operator: eq
+          value: engineering
+        - field: request.token_count
+          operator: range
+          value:
+            gte: 1
+            lt: 4096
+
+  # ** matches one or more additional segments; an applicable deny overrides allow.
+  - id: deny-secret-read
+    effect: deny
+    scope:
+      resource: tools/github/read/secret/**
+    condition:
+      always: true
+
+# Requests with no true applicable allow condition are denied by default.
+# Optional scope fields: path (file/directory), resource, and apiPath.
+# At least one scope field is required. Multiple fields combine with AND.
