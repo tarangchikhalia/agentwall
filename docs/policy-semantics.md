@@ -1,6 +1,7 @@
 # Policy semantic decisions for v0.1
 
-Status: Agreed semantics and schema contract; implementation contracts and full acceptance evidence pending  
+Status: AGE-7 specification and executable reference contract complete; production Go adoption pending
+
 Date: 2026-10-15  
 Issue: AGE-7 — Specify policy schema and matching semantics
 
@@ -474,19 +475,6 @@ If startup has no valid policy set, the service remains unready and evaluation r
 
 This defines loading behavior; it does not add hot reload to v0.1.
 
-## 20. What remains to complete AGE-7
-
-This document records the agreed semantic decisions. AGE-7 remains incomplete until its remaining deliverables are specified and validated:
-
-- Versioned schema: assembled in the [schema contract](policy-schema-v1alpha1.md) and [JSON Schema](schemas/agentpolicy-v1alpha1.schema.json), with mandatory loader checks documented separately from structural checks. Full loader acceptance coverage remains pending.
-- Typed Go model and immutable condition-tree specifications.
-- Exhaustive operator truth tables covering missing, null, valid values, and invalid types.
-- Positive and negative fixtures with expected load, evaluation, and access-decision outcomes.
-- Documentation of wildcard rules, precedence, limits, and compatibility.
-- Focused tests and alignment with `docs/requirements.md`, POL-01–04, and ADR 003.
-
-Gateway enforcement, verified delegation, and crash-durable auditing remain outside the issue’s v0.1 scope.
-
 ## 21. Shared acceptance fixture contract
 
 Loader and evaluator acceptance tests use shared declarative fixtures. Each case declares:
@@ -500,8 +488,8 @@ Loader and evaluator acceptance tests use shared declarative fixtures. Each case
 
 Load-rejection cases stop at loading and have no expected evaluation result or decision. Evaluation cases require successful loading. Evaluation failures have an expected error category and no final decision. Successful evaluations have an expected decision and no evaluation error. Fixed server time is injected through the test clock, never supplied as a trusted request assertion.
 
-AGE-11 consumes the loader cases; evaluator acceptance tests consume the same fixture contract. This agreement defines the fixture contents and outcome rules; concrete serialization, fixture files, and their test runner remain deliverables.
+AGE-11 consumes the loader cases; evaluator acceptance tests consume the same fixture contract. The concrete serialization, cases, sequential activation scenarios, runner, and boundary generators are documented in the [conformance corpus](../tests/policy_schema/README.md).
 
-## 22. Remaining artifact work
+## 22. Compatibility and dependent work
 
-The decision questions tracked in this document have been resolved. AGE-7 still requires the concrete deliverables in section 20: full acceptance coverage of the assembled schema contract, detailed Go type and condition-tree specifications, exhaustive operator tables, executable acceptance fixtures, and alignment with requirements and ADRs. Resolving the decisions does not establish that those artifacts are complete or that the behavior is implemented.
+The decisions tracked here are resolved for v1alpha1. Changes to syntax or semantics require a new version and explicit compatibility handling; policies never silently migrate. Production acceptance is established only when the Go implementations pass the shared corpus and their implementation-specific checks. The service remains a scaffold until those dependent tasks are complete.

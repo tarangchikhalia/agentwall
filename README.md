@@ -47,6 +47,8 @@ The objective is engineering mastery through a limited, complete system: correct
 ## Project documents
 
 - [Requirements](docs/requirements.md)
+- [Policy language contract](docs/policy-semantics.md)
+- [Policy conformance fixtures](tests/policy_schema/README.md)
 - [Architecture](docs/architecture/v0.1.md)
 - [Roadmap](docs/roadmap.md)
 - [Direction decision](docs/ADRs/003-policy-audit-first.md)

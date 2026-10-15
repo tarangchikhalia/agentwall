@@ -1,6 +1,6 @@
 # AgentPolicy v1alpha1 schema contract
 
-Status: Schema contract for AGE-7; loader implementation and full acceptance suite pending.
+Status: AGE-7 schema contract with executable reference checks; production Go loader pending.
 
 The [JSON Schema](schemas/agentpolicy-v1alpha1.schema.json) describes the structural policy format. This document and [policy semantics](policy-semantics.md) define mandatory checks beyond JSON Schema. Passing the structural schema alone is insufficient to activate a policy. These artifacts jointly specify `agentwall.dev/v1alpha1`; semantics do not silently change within this version.
 
@@ -100,7 +100,7 @@ All applicable rule conditions pass runtime type validation before any condition
 
 ## Sample and acceptance status
 
-The [sample policy](policy-envelop-sample/policy-v1alpha1-sample.yaml) uses this structure and should be deployed under the standard filename. Acceptance must cover both schema checks and mandatory preparation checks. Structural validation examples do not constitute a production loader or the exhaustive shared fixture suite required to finish AGE-7.
+The [sample policy](policy-envelop-sample/policy-v1alpha1-sample.yaml) uses this structure and should be deployed under the standard filename. The [shared conformance corpus](../tests/policy_schema/README.md) exercises schema and mandatory preparation checks through a test-only reference oracle. It does not constitute the production Go loader.
 
 Structural checks are in [test_schema.py](../tests/policy_schema/test_schema.py). With Python packages `jsonschema` and `PyYAML` available, run:
 
@@ -108,4 +108,4 @@ Structural checks are in [test_schema.py](../tests/policy_schema/test_schema.py)
 python3 -m unittest discover -s tests/policy_schema -v
 ```
 
-These are development checks and introduce no Go service dependency. They verify the schema itself, the repository sample, and representative positive/negative structures; they do not claim exhaustive semantic acceptance coverage.
+The same command now also runs the shared operator/evaluation corpus, sequential activation scenarios, and exact boundary checks. See the [test setup](../tests/policy_schema/README.md) for pinned dependencies and `make policy-test`. These development checks introduce no Go service dependency and do not establish production implementation acceptance.
