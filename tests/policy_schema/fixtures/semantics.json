@@ -5105,7 +5105,7 @@
       "files": [
         {
           "path": "0/agentwall-policy.yaml",
-          "source": "apiVersion: agentwall.dev/v1alpha1\nkind: AgentPolicy\nmetadata:\n  name: example\nrules:\n- id: rule\n  effect: allow\n  scope:\n    resource: tools/github/read\n  condition:\n    all:\n    - always: true\n    - field: user.value\n      operator: gt\n      value: 1\n"
+          "source": "apiVersion: agentwall.dev/v1alpha1\nkind: AgentPolicy\nmetadata:\n  name: example\nrules:\n- id: rule\n  effect: allow\n  scope:\n    resource: tools/github/read\n  condition:\n    all:\n    - not:\n        always: true\n    - field: user.value\n      operator: gt\n      value: 1\n"
         }
       ],
       "expected": {
@@ -5162,7 +5162,7 @@
       "files": [
         {
           "path": "0/agentwall-policy.yaml",
-          "source": "apiVersion: agentwall.dev/v1alpha1\nkind: AgentPolicy\nmetadata:\n  name: example\nrules:\n- id: rule\n  effect: allow\n  scope:\n    resource: tools/github/read\n  condition:\n    all:\n    - field: user.value\n      operator: gt\n      value: 1\n    - always: true\n"
+          "source": "apiVersion: agentwall.dev/v1alpha1\nkind: AgentPolicy\nmetadata:\n  name: example\nrules:\n- id: rule\n  effect: allow\n  scope:\n    resource: tools/github/read\n  condition:\n    all:\n    - field: user.value\n      operator: gt\n      value: 1\n    - not:\n        always: true\n"
         }
       ],
       "expected": {
