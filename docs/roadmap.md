@@ -1,31 +1,22 @@
 # AgentWall roadmap
 
-Date: 2026-10-14
-Current status: Foundation scaffold; policy engine and audit first
+One service, five internal modules — Gate, Delegate, Guard, Codex, Watchtower — delivered through capability slices. 
 
-## Stage 1: standalone policy and audit service, v0.1
+Each milestone follows **design → plan → implement → verify** and has acceptance evidence and a release tag. 
 
-Milestones advance on evidence, not elapsed weeks. Security scenarios are tested throughout implementation.
+Modules are neither separate deployments nor sequential stages. End-to-end verification starts in v0.2.0.
 
-| Milestone | Deliverable | Exit gate |
-| --- | --- | --- |
-| M0 — Contracts | Policy schema/semantics, trust matrix, OpenAPI, audit failure states, storage and CLI contracts; updated threat model. | Implementation prerequisites in requirements are resolved; fixtures specify boundary and failure cases. |
-| M1 — Policy and audit vertical slice | Local validated YAML bundle, native Go evaluator, scoped caller authentication/assertion checks, REST authorization, bounded queue and PostgreSQL persistence; sample enforcing application. | Allow/deny/default-deny and assertion tests pass; denied/error responses block the sample action; events correlate with decisions; queue saturation follows strict/best-effort contract. |
-| M2 — Safe policy lifecycle | Git polling, policy tests, immutable persistence, atomic activation, restart recovery, rollback/pin/resume CLI. | Invalid candidates preserve active state; concurrent evaluation sees complete snapshots; rollback survives restart and polling. |
-| M3 — Audit and administration | Key management, scoped audit REST/CLI queries, retention, retry/recovery and shutdown behavior. | Revocation, rotation, restricted queries, retry exhaustion, database outages, and bounded cleanup/drain are tested. |
-| M4 — Operations and validation | Metrics, traces, logs, readiness, Docker Compose, migrations, backup/restore and benchmark harness. | Fresh deployment and recovery reproduce; race/security/failure tests pass; benchmark methodology and results are published. |
-| M5 — v0.1 release | Integration example, policy guide, API/CLI reference, threat model, ADRs, runbooks and tagged artifacts. | An independent engineer deploys, integrates, queries decisions, updates/rolls back policies, and operates the service using documentation. |
+| Milestone | Scope and completion evidence | Duration | Baseline target window |
+| --- | --- | --- | --- |
+| v0.1.0 — Test environment | Two or three agents, controlled resources, repeatable permitted/denied/invalid-authority fixtures; documented expectations and direct-path latency, throughput and error measurements. Harness completion does not establish enforcement. | 2 weeks | October 19–November 1, 2026 |
+| v0.2.0 — Enforce and audit one action | One integration and bounded action/resource, verified agent identity, minimal policy, enforcement and correlated evidence. Allow reaches resource; deny never reaches it; both recorded; decisions and observed outcomes distinguishable. | 5 weeks | November 2–December 6, 2026 |
+| v0.3.0 — Delegated authority | Bounded delegation and initial identity-provider integration; represented principal and authority source/scope established. Forged, expired, invalid and insufficient authority cannot authorize execution; principals attributable in evidence. | 6 weeks | December 7, 2026–January 17, 2027 |
+| v0.4.0 — Organization/team policies | Explicit scope/combination semantics, validation, versioning and safe activation. Conflicts predictable, invalid activation rejected, evaluated version recorded. | 5 weeks | January 18–February 21, 2027 |
+| v0.5.0 — Context and obligations | Bounded contextual rules and one complete approval/obligation workflow bound to the action executed. Missing context/unmet obligations block; satisfied conditions permit intended action. | 6 weeks | February 22–April 4, 2027 |
+| v0.6.0 — Reliability and audit integrity | Dependency failures, policy updates, audit durability/delivery failure, detectable gaps, tamper evidence, operational visibility and controlled-load overhead. Demonstrate integrity and explicit failure behavior against a budget defined during design. | 6 weeks | April 5–May 16, 2027 |
+| v0.7.0 — Product qualification | Realistic integrated workflows, negative security cases, deployment/recovery/adverse conditions, documentation and findings resolved. Repeatable acceptance suite demonstrates enforcement, attribution, integrity and operations together. | 4 weeks | May 17–June 13, 2027 |
+| Contingency | Holidays, integration uncertainty, findings and rework | 4–8 weeks | Buffer through July–August 2027 |
 
-The vertical slice needs only the authentication and storage necessary to safely exercise policy and audit. Full administration follows; it must not delay proving the core path or turn unauthenticated scaffolding into a deployable service.
+Patch releases fix a milestone (for example v0.2.1). v1.0.0 requires a separate stable-public-contract decision supported by qualification and practical feedback; v0.7.0 does not automatically imply readiness.
 
-## Stage 2: AI gateways, separately reviewed after v0.1
-
-Evaluate LLM gateway behavior, MCP tool authorization, and agent-to-agent identity/delegation incrementally. Provider routing, streaming, token accounting, credential brokerage, and end-user authority verification require explicit contracts before commitment. The old gateway requirements are historical input, not automatic acceptance criteria.
-
-## Stage 3: secure agent runtime
-
-Consider workload identity, sandboxing, network isolation, and execution lifecycle only after reviewing Stage 2 outcomes. Do not introduce unfinished runtime code in v0.1.
-
-## Historical plans
-
-The previous [gateway roadmap](archive/gateway-v1-roadmap.md) and [v1 requirements](archive/gateway-v1-requirements.md) are superseded by [ADR 003](ADRs/003-policy-audit-first.md).
+One integration path first, existing identity/secrets infrastructure, minimal management interface, bounded policy/delegation and one initial approval workflow underpin these estimates. Extra adapters/providers and polished UI need separate estimates. Delegation and approval/action binding are the largest uncertainties. Project/agent policy scopes have no separately committed delivery milestone.
