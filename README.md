@@ -1,65 +1,80 @@
 # AgentWall
 
-An open-source, self-hosted authorization policy engine and audit service for AI applications.
+## Overview
 
-**Status: pre-alpha foundation scaffold.** The capabilities below describe the planned v0.1 release; they are not implemented or released yet.
+AgentWall is an AI security and authorization platform designed to enforce organization and team policies and make agent actions accountable:
 
-Our first focus is policy evaluation and audit. AgentWall will answer whether an application should permit an action and record the authorization decision. Integrating applications must enforce that decision and block actions on errors or timeouts.
+**Which agent took what action, under whose authority, on behalf of whom?**
 
-## First release: policy and audit
+Before execution, it determines whether an agent may perform an action on a resource under applicable policies, delegated authority and context.
 
-- Native Go evaluator with declarative, versioned YAML policies.
-- Explicit deny overrides allow; default deny.
-- Scoped API keys and validation of the attributes each caller may assert.
-- REST authorization responses containing decision ID, outcome, reason, and policy revision.
-- Git-managed policies with validated, atomic activation, persistent bundles, and rollback.
-- Bounded asynchronous auditing to PostgreSQL, with REST and CLI queries.
-- Structured logs, metrics, traces, and Docker Compose deployment.
+**Current status:** pre-alpha
 
-Strict audit mode will reject requests when their decision events cannot be accepted into the queue. An in-memory queue cannot guarantee audit survival across crashes. Audit events describe authorization decisions, not proof of upstream execution or tamper-evident history.
+## Architecture
 
-## Architecture and boundary
+AgentWall is one deployable service with five separated internal modules:
 
-```mermaid
-flowchart LR
-  A[Integrating application] -->|Scoped API key and authorization request| S[AgentWall]
-  S --> P[Native Go evaluator snapshot]
-  S --> Q[Bounded audit queue]
-  Q --> D[(PostgreSQL)]
-  G[Git policies] --> V[Validate and prepare bundle]
-  V --> P
-  V --> B[(Persistent local bundles)]
-  S -->|Decision or error| A
+| Modules | Responsibility |
+| --- | --- |
+| **Gate** | Intercept and normalize requests, coordinate with other modules for authorization, enforcement and trace, and forward permitted actions. |
+| **Delegate** | Verify agent identity, represented principal (user), the source and scope of delegated authority (resource). |
+| **Guard** | Evaluate policies against trusted context and return decisions and required approvals or obligations. |
+| **Codex** | Define, validate, test, version and activate policies; reuse Guard's evaluator for policy tests. |
+| **Watchtower** | Trace and record the actions of AgentWall in a temperproof audit trail |
+
+Guard decides; Gate enforces. Authorization failures fail closed. An allow decision or forwarding attempt does not establish successful execution; evidence must preserve uncertain outcomes.
+
+Mandatory runtime isolation is outside AgentWall's product responsibility.
+
+See the [architecture](docs/architecture.md).
+
+## Quick Start
+
+Install Go 1.26.9, as declared in `go.mod`, and Make. From the repository root:
+
+```sh
+make build
+./bin/agentwall
+./bin/agentwall -help
 ```
 
-The application authenticates its users, supplies assertions within its configured trust scope, and enforces the response. AgentWall authenticates the calling service; v0.1 does not independently verify end-user permissions or delegation chains.
+The default command prints the foundation status and exits. It does not enforce or forward agent actions.
 
-## Direction
+For development checks:
 
-1. **Policy and audit:** a complete, deployable v0.1 service.
-2. **AI gateways:** evaluate LLM, MCP, and agent-to-agent integrations independently after v0.1.
-3. **Secure agent runtime:** consider isolation, workload identity, and network enforcement later.
+```sh
+make test
+make check
+```
 
-Gateway forwarding, credential brokerage, human approvals, permission-intersection guarantees, tamper-evident audit, and sandboxing are outside v0.1. Later-stage capabilities require their own design review.
+Race tests require CGO and a C compiler. Full checks include a vulnerability scan and may require network access. See the [development guide](docs/development.md) for the workflow and legacy policy-test context.
 
-The objective is engineering mastery through a limited, complete system: correctness, security boundaries, concurrency, failure handling, and operations before expansion.
+## Roadmap
 
-## Project documents
+Each milestone follows **design → plan → implement → verify**, with defined acceptance evidence and a release tag.
 
-- [Requirements](docs/requirements.md)
-- [Policy language contract](docs/policy-semantics.md)
-- [Policy conformance fixtures](tests/policy_schema/README.md)
-- [Architecture](docs/architecture/v0.1.md)
-- [Roadmap](docs/roadmap.md)
-- [Direction decision](docs/ADRs/003-policy-audit-first.md)
-- [Threat model](docs/threat-model.md)
-- [Benchmark conditions](docs/benchmark-conditions.md)
-- [Support matrix](docs/support-matrix.md)
+| Milestone | Capability |
+| --- | --- |
+| **v0.1.0** | Reproducible test environment and direct-path measurements. |
+| **v0.2.0** | Enforce and audit one action; begin end-to-end verification. |
+| **v0.3.0** | Verify delegated authority and principal attribution. |
+| **v0.4.0** | Apply organization/team policies with safe policy management. |
+| **v0.5.0** | Enforce contextual conditions and one approval or obligation workflow. |
+| **v0.6.0** | Strengthen operational reliability, audit durability and tamper evidence. |
+| **v0.7.0** | Qualify the integrated product through realistic workflows and operational testing. |
 
-## Development and contributions
+See the [detailed roadmap](docs/roadmap.md). Immediate work is the [v0.1.0 test-environment design](docs/milestones/v0.1.0.md).
 
-See [development setup](docs/development.md) for the current scaffold and build commands, and [CONTRIBUTING.md](CONTRIBUTING.md) for contribution expectations. Sign off commits under the Developer Certificate of Origin (`git commit -s`). Report vulnerabilities privately using [SECURITY.md](SECURITY.md).
+## Guidelines
 
-## License
+- Build complete, bounded capability slices across the internal concerns they require.
+- Define trust assumptions, contracts and acceptance criteria before dependent implementation.
+- Verify expected outcomes, negative cases, relevant failures and integration throughout development.
+- Distinguish planned capabilities from implemented and measured behavior.
+- Highlight foundational contradictions and confirm deliberate changes with Tarang before modifying the baseline.
 
-Apache License 2.0. See [LICENSE](LICENSE).
+The [foundational plan](docs/foundational-plan.md) governs current development. Consult the [open decisions](docs/open-decisions.md) for unresolved choices and the [documentation index](docs/README.md) for supporting documents.
+
+## Licensing
+
+AgentWall is licensed under the Apache License 2.0. See [LICENSE](LICENSE).
